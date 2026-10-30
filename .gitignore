@@ -1,0 +1,27 @@
+# Dados — nunca versionar
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+*.ods
+~$*
+dados/
+data/
+Dados/
+base/
+bases/
+entrada/
+input/
+in/
+out/
+exportacoes/
+*.pdf
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+node_modules/
