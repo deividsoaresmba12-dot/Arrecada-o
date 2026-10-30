@@ -1,10 +1,16 @@
-# Acompanhamento GC Leste — Top GC 15K
+# Acompanhamento Grande Cliente — Águas do Rio
 
-Painel de faturamento, arrecadação e cobrança das matrículas Top GC 15K da Superintendência Leste.
+Página de introdução com dois painéis de faturamento, arrecadação e cobrança:
 
-**O painel abre vazio.** Não há nenhum dado no repositório. As informações aparecem só depois que você conecta uma pasta do seu computador com a planilha. Tudo é processado **no seu navegador**: nenhum dado é enviado para servidor, e nenhum dado é salvo no navegador. O painel guarda apenas a referência da última pasta conectada, sem o conteúdo, para facilitar a próxima abertura; o botão **Desconectar** apaga essa referência.
+| Endereço | Painel |
+|---|---|
+| `/` | Introdução: escolha da superintendência |
+| `/leste/` | **Leste** — matrículas Top GC 15K da Superintendência Leste |
+| `/top100/` | **Interior Lagos** — Top GC Interior Lagos v2.0 |
 
-Versão atual: **1.0.1** (ver [CHANGELOG](CHANGELOG.md)).
+**Os painéis abrem vazios.** Não há nenhum dado no repositório. As informações aparecem só depois que você conecta uma pasta do seu computador com a planilha. Tudo é processado **no seu navegador**: nenhum dado é enviado para servidor, e nenhum dado é salvo no navegador. O painel guarda apenas a referência da última pasta conectada, sem o conteúdo, para facilitar a próxima abertura; o botão **Desconectar** apaga essa referência.
+
+Versão atual: **1.1.0** (ver [CHANGELOG](CHANGELOG.md)).
 
 ## Como usar
 
@@ -19,7 +25,7 @@ Versão atual: **1.0.1** (ver [CHANGELOG](CHANGELOG.md)).
    - **Trocar pasta**: escolhe outra pasta.
    - **Desconectar**: limpa a tela e esquece a pasta.
    - **Abrir planilha**: alternativa sem conectar pasta; escolha a planilha (e, se quiser, o `ajustes.xlsx`).
-   - **Resumo executivo** (PDF de 1 página) e **Baixar base (Excel)**: gerados no próprio navegador.
+   - **Resumo executivo** (PDF de 1 página), **Excel por prioridade** e, no Leste, **Baixar base (Excel)**: gerados no próprio navegador.
 
 Na próxima vez que abrir o painel, ele mostra a última pasta usada; clique em **Recarregar** para permitir a leitura de novo.
 
@@ -33,7 +39,7 @@ Na próxima vez que abrir o painel, ele mostra a última pasta usada; clique em 
 
 É preciso internet para carregar as bibliotecas (Chart.js, SheetJS, jsPDF) e as fontes.
 
-## Estrutura esperada da pasta de dados
+## Estrutura esperada da pasta de dados — Leste
 
 ```
 Minha pasta/
@@ -78,23 +84,41 @@ Arquivo com **"ajuste" no nome** (ex.: `ajustes.xlsx`), com uma aba que tenha es
 
 A prioridade informada substitui a calculada; a lista de matrículas mostra a etiqueta "ajuste manual" e a prioridade que a regra daria. Se o arquivo tiver erro, o painel carrega a base sem ajustes e mostra o problema.
 
+## Estrutura esperada da pasta de dados — Interior Lagos
+
+```
+Minha pasta/
+├── Top_Gc_produção.xlsx       ← base (obrigatória)
+├── ajustes.xlsx               ← ajustes manuais de prioridade (opcional, mesmo formato do Leste)
+└── (subpastas e outros arquivos são permitidos)
+```
+
+- Formato **.xlsx** ou **.xls**. Se houver várias planilhas, o painel prefere nomes com `Top GC`, depois `GC`/`TOP`, depois `produção`/`interior`/`lagos`, e em seguida a mais recente.
+- Aba principal: a primeira cujo cabeçalho (nas 15 primeiras linhas) tenha `MATRICULA` e uma coluna de saldo (`TOTAL VENCIDO`, `SALDO VENCIDO` ou `SALDO TOTAL`) — na base atual, a aba **Top GC**.
+- **Colunas obrigatórias:** `MATRICULA`, `CIDADE`, `CLASSIFICAÇÃO`, a coluna de saldo, `FAT. REF.01…FAT. REF.12` e `Arrec Ref.01…Arrec Ref.12`.
+- **Colunas opcionais:** `CLIENTE`, `UTILIZAÇÃO`, `CATEGORIA`, `SUB-CATEGORIA`, `QTD ECONOMIA`, `SIT_LIGAÇÃO`, `CARTEIRA`, `MACROCLUSTER.CURVA CLIENTE`, `MACROCLUSTER.MACRO CLUSTER`, `DATA LEITURA`, `NFC`, `NFA`, `PARC`, `SALDO PARC`, `VENCIMENTO`, `MÉDIA DIAS PAGAMENTO`, `STATUS`, `AÇÃO`.
+- **Abas complementares** (opcionais, no mesmo arquivo): `Base Fat2` (bairro e faturas a vencer), `Base Arrecadação` (dia médio de pagamento e pagamentos) e `Base Saldo` (saldo total).
+
 ## Regras de cálculo
 
-Ver [docs/CALCULOS.md](docs/CALCULOS.md). Estrutura do código: [docs/CONSTRUCAO.md](docs/CONSTRUCAO.md).
+- Leste: [docs/CALCULOS.md](docs/CALCULOS.md). Estrutura do código: [docs/CONSTRUCAO.md](docs/CONSTRUCAO.md).
+- Interior Lagos: [docs/CALCULOS-TOP100.md](docs/CALCULOS-TOP100.md).
 
 ## Estrutura do repositório
 
 ```
-index.html          página
-css/style.css       estilo
-js/calculos.js      cálculos (funções puras, sem interface)
-js/app.js           interface, leitura da pasta, exportações
-img/                logo
-docs/               documentação
+index.html               introdução (escolha do painel)
+leste/index.html         painel Leste
+leste/css/style.css      estilo
+leste/js/calculos.js     cálculos (funções puras, sem interface)
+leste/js/app.js          interface, leitura da pasta, exportações
+top100/…                 painel Interior Lagos (mesma organização)
+img/                     logo, ícones e fundo da introdução
+docs/                    documentação
 ```
 
 ## Privacidade
 
 - Nenhum dado de clientes fica no repositório. O `.gitignore` bloqueia planilhas (`*.xlsx`, `*.xls`, `*.csv`) e pastas de dados.
-- Não usa `localStorage`/`sessionStorage`. O IndexedDB guarda só a referência da pasta (`topgc_leste` / `pasta`).
+- Não usa `localStorage`/`sessionStorage`. O IndexedDB guarda só a referência da pasta (`topgc_leste` e `topgc_interior` / `pasta`). Cópias de base salvas por versões antigas (`dados_v2`, `dados_int2`) são apagadas ao abrir.
 - Bibliotecas carregadas do cdnjs com versão fixa e verificação de integridade (SRI).

@@ -191,6 +191,8 @@ Não há uso de `localStorage` nem `sessionStorage`.
 
 ## 6. Versão 1.0.0 (GitHub Pages)
 
+> Desde a 1.1.0 os arquivos do Leste ficam em `leste/` (`leste/index.html`, `leste/css/`, `leste/js/`); `img/` é compartilhada e o `index.html` da raiz é a página de introdução.
+
 | Arquivo | Conteúdo |
 |---|---|
 | `index.html` | Mesma marcação da original; barra de fonte com Conectar/Trocar pasta, Recarregar, Desconectar, Abrir planilha, Resumo executivo, Baixar base; `#srcInfo` (pasta, arquivos reconhecidos, data/hora da carga) e `#srcMsg` (avisos e erros) |

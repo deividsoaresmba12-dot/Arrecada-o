@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top GC Leste 15K</title>
+<meta name="description" content="Painel de faturamento, arrecadação e cobrança Top GC 15K – Superintendência Leste. Abre vazio; os dados são lidos de uma pasta local, só no navegador.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../img/favicon-192.png">
+<link rel="apple-touch-icon" href="../img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap"><div class="sheet">
+<header class="band">
+  <div class="brand">
+    <div class="logo-box"><img src="../img/logo-aguas-do-rio.png" alt="Águas do Rio" width="138" height="49"></div>
+    <div class="brand-txt">
+    <h1>ACOMPANHAMENTO GC</h1>
+    <div class="sub">Superintendência Leste · Base Top GC 15K · Faturamento, arrecadação e cobrança</div>
+    </div>
+    <div class="brand-big">LESTE</div>
+  </div>
+  <div class="ref-wrap"><div class="ref"><small>Mês de referência</small><b id="refMes">—</b><small id="refNote"></small></div></div>
+</header>
+
+<section class="bar-top" aria-label="Fonte dos dados e filtros">
+  <div class="src">
+    <div class="st" id="srcStatus"></div>
+    <button class="btn" id="btnPasta" type="button">Conectar pasta</button>
+    <button class="btn ghost" id="btnRecarregar" type="button" hidden>Recarregar</button>
+    <button class="btn ghost" id="btnDesconectar" type="button" hidden>Desconectar</button>
+    <button class="btn ghost" id="btnArquivo" type="button" title="Escolher a planilha (e, se quiser, o ajustes.xlsx) sem conectar a pasta">Abrir planilha</button>
+    <button class="btn" id="btnResumo" type="button" disabled><span class="ico" aria-hidden="true">⤓</span> Resumo executivo</button>
+    <button class="btn ghost" id="btnBaseXls" type="button" disabled title="Baixa todas as matrículas do filtro atual em Excel"><span class="ico" aria-hidden="true">⤓</span> Baixar base (Excel)</button>
+    <input type="file" id="inDir" webkitdirectory multiple hidden>
+    <input type="file" id="inFile" accept=".xlsx,.xls" multiple hidden>
+    <div class="msg" id="srcInfo" hidden></div>
+    <div class="msg" id="srcMsg" hidden></div>
+  </div>
+  <div class="filters">
+    <div class="ms" id="msMun"></div>
+    <div class="ms" id="msCls"></div>
+    <div class="ms" id="msMat"></div>
+    <button class="btn" id="btnReset" type="button">Limpar filtros</button>
+    <div class="active-filter" id="activeFilter"></div>
+  </div>
+</section>
+
+<section class="kpis" id="kpis"></section>
+
+<section class="panel">
+  <div class="ph"><h2>Prioridade de cobrança</h2><span>Clique na caixa para ver as matrículas · passe o mouse para ver o critério</span></div>
+  <div class="prio" id="prioTop"></div>
+</section>
+
+<section class="grid2">
+  <div class="panel"><div class="ph"><h2>Faturamento x Arrecadação</h2><span id="lblCol">Mensal · R$ · ▲▼ variação vs mês anterior</span></div><div class="chartbox"><canvas id="cCol" aria-label="Gráfico de colunas mensal de faturamento e arrecadação"></canvas></div><div class="pnote" id="colNota"></div></div>
+  <div class="panel"><div class="ph"><h2>Macro cluster</h2><div class="seg" id="segPareto" role="group" aria-label="Medida do Pareto"><button type="button" data-m="s" class="on">Saldo de conta</button><button type="button" data-m="sv">Saldo vencido</button><button type="button" data-m="n">Matrículas</button></div></div><div class="chartbox"><canvas id="cLin" aria-label="Gráfico de Pareto por macro cluster"></canvas></div><div class="pnote" id="paretoNota"></div></div>
+</section>
+
+<section class="panel">
+  <div class="ph"><h2 id="clsTit">Resumo por macro cluster</h2><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span id="clsSub">Clique em uma linha para ver as matrículas</span><div class="seg" id="segCls" role="group" aria-label="Agrupar por"><button type="button" data-v="mc" class="on">Macro cluster</button><button type="button" data-v="cl">Classificação</button></div></div></div>
+  <div class="tw"><table id="tCls"></table></div>
+</section>
+
+<section class="panel">
+  <div class="ph"><h2>Top 20 matrículas – Faturamento x Arrecadação</h2><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span id="lblTop">Ordenado por faturamento acumulado</span><div class="seg" id="segTop" role="group" aria-label="Filtrar por prioridade"><button type="button" data-v="" class="on">Todas</button><button type="button" data-v="CRÍTICA"><i class="sd" style="background:var(--crit)"></i>Crítica</button><button type="button" data-v="ALTA"><i class="sd" style="background:var(--alta)"></i>Alta</button><button type="button" data-v="MÉDIA"><i class="sd" style="background:var(--media)"></i>Média</button><button type="button" data-v="BAIXA"><i class="sd" style="background:var(--baixa)"></i>Baixa</button><button type="button" data-v="REGULAR"><i class="sd" style="background:var(--reg)"></i>Regular</button></div></div></div>
+  <div class="tw"><table id="tTop"></table></div>
+  <div class="crit-leg gaps" id="critLeg" aria-label="Critérios de prioridade"></div>
+</section>
+
+<section class="panel">
+  <div class="ph"><h2>Prioridade baixa e regular</h2><span>Clique em um nível para ver as matrículas ou baixe em Excel</span></div>
+  <div class="prio" id="prio"></div>
+</section>
+
+<section class="panel">
+  <div class="ph"><h2>Atualização cadastral</h2><span>Clique na caixinha para ver a lista e filtrar por tipo de pendência</span></div>
+  <div class="prio" id="cad" style="grid-template-columns:minmax(0,440px)"></div>
+</section>
+
+
+<section class="panel dark summary">
+  <div class="ph"><h2>Resumo executivo</h2><span>Gerado a partir do filtro atual</span></div>
+  <ul id="resumo"></ul>
+</section>
+
+<section class="panel gaps">
+  <div class="ph"><h2>Critérios e dados faltantes</h2><span>Leia antes de apresentar</span></div>
+  <div id="gaps"></div>
+</section>
+</div></div>
+<div id="toast" role="status" hidden></div>
+
+<dialog id="dlg" aria-labelledby="dTit">
+  <div class="dh"><div><h2 id="dTit">—</h2><p id="dSub"></p></div><button class="x" id="dClose" type="button">Fechar ✕</button></div>
+  <div class="db">
+    <div class="dstats" id="dStats"></div>
+    <div class="dtools"><input id="dBusca" placeholder="Buscar matrícula ou cliente nesta lista" autocomplete="off"><div id="dChips" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+    <div class="panel dtable" style="padding:0"><div class="tw" id="dTabWrap"><table id="dTab"></table></div></div>
+    <details class="dnote"><summary>Como ler esta lista</summary><div id="dNote"></div></details>
+  </div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" integrity="sha512-ZwR1/gSZM3ai6vCdI+LVF1zSq/5HznD3ZSTk7kajkaj4D292NLuduDCO1c/NT8Id+jE58KYLKT7hXnbtryGmMg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="js/calculos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
