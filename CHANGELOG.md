@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 — 30/10/2026
+
+- Link "‹ Painéis" no topo dos painéis Leste e Interior Lagos, para voltar à página de introdução.
+
 ## 1.1.0 — 30/10/2026
 
 - Nova página de introdução no endereço principal ("Acompanhamento Grande Cliente"), no modelo da página "Painéis Top GC", com as caixas LESTE e INTERIOR LAGOS.

@@ -7,7 +7,7 @@
 'use strict';
 const C = window.Calculos;
 const { PRIOS, NOMES_MES, sum, norm, mcNome, clsDe } = C;
-const VERSAO = '1.1.0';
+const VERSAO = '1.1.1';
 
 const CRIT={
   'CRÍTICA':'% arrecadado < 50% ou saldo vencido (sem parcelamento) ≥ R$ 1.000.000,00, exceto quem arrecadou ≥ 95%',

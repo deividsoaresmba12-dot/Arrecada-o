@@ -304,3 +304,7 @@ dialog#dlg .dh{flex:0 0 auto}
 .src .msg.info{color:var(--muted)}
 .src .msg.info b{color:var(--preto)}
 .src .msg ul{margin:4px 0 0;padding-left:18px}
+.voltar{display:inline-flex;align-items:center;gap:6px;margin:0 0 8px;padding:4px 10px 4px 6px;border-radius:6px;font:600 13px var(--sans);letter-spacing:.04em;color:#ffffff;text-decoration:none}
+.voltar span{font-size:18px;line-height:1}
+.voltar:hover{background:rgba(255,255,255,.14)}
+.voltar:focus-visible{outline:3px solid var(--azul-claro);outline-offset:2px}
