@@ -7,7 +7,7 @@
 'use strict';
 const C = window.Calculos;
 const { PRIOS, NOMES_MES, sum, norm, mcNome, clsDe } = C;
-const VERSAO = '1.1.1';
+const VERSAO = '1.2.0';
 
 const CRIT={
   'CRÍTICA':'% arrecadado < 50% ou saldo vencido (sem parcelamento) ≥ R$ 1.000.000,00, exceto quem arrecadou ≥ 95%',
@@ -36,7 +36,9 @@ const VZ='—', MSG_VAZIO='Nenhuma pasta conectada.';
 
 /* ---------- estado ---------- */
 let DATA=[], MONTHS=[], META={}, MESES=[], PERIODO='', PARCIAL=false, AJUSTES={}, VAZIO=true;
+let DS_ATUAL=null;
 function prep(ds){
+  DS_ATUAL=ds;
   const r=C.preparar(ds,ds.ajustes||{});
   DATA=r.DATA; MONTHS=r.MONTHS; MESES=r.MESES; PERIODO=r.PERIODO; PARCIAL=r.PARCIAL; META=ds.meta||{}; AJUSTES=ds.ajustes||{};
   VAZIO=!DATA.length;
@@ -552,7 +554,7 @@ const ehAjustes=n=>/ajuste/i.test(n);
 const MSG_LAYOUT='Nenhuma planilha tem o layout da aba "Top GC 15K". Colunas obrigatórias: Matricula, CIDADE, CLASSIFICACAO, as colunas de meses (cabeçalho com data), Total Geral (depois do faturamento), as colunas de meses da arrecadação, Total Geral (depois da arrecadação), QTD faturas e Saldo de Conta.';
 function lerPlanilha(buf){
   if(!window.XLSX) throw new Error('O leitor de planilhas não carregou. Verifique a conexão e recarregue a página.');
-  return XLSX.read(buf,{type:'array',cellDates:false});
+  return XLSX.read(new Uint8Array(buf),{type:'array',cellDates:false}); // Uint8Array: aceita também arquivos vindos da página de introdução
 }
 const matriz=ws=>XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
 /** Base: primeira aba com o cabeçalho Matricula + Saldo de Conta (mesma regra do original). */
@@ -615,6 +617,13 @@ function busy(b){['btnPasta','btnArquivo','btnRecarregar','btnDesconectar'].forE
 function status(){
   const m=META, el=$('srcStatus'), info=$('srcInfo');
   const conectado=!VAZIO;
+  if(modo==='retrato'){
+    el.innerHTML=`<span title="Retrato com dados" class="dot ok"></span>Retrato gerado em <b>${esc(m.retrato||m.carregado)}</b> · Última atualização da base: <b>${esc(m.modificado)}</b>`;
+    el.title=`${m.file}${m.sheet?' (aba '+m.sheet+')':''}`;
+    info.className='msg info'; info.innerHTML=`<b>Base:</b> ${esc(m.file)} · ${N(DATA.length)} matrículas, ${MONTHS.length} meses${m.ajustes?` · <b>Ajustes manuais:</b> ${N(m.ajustes.n)} matrícula(s)`:''}<br><b>Arquivo com dados de clientes:</b> compartilhe só com quem pode ver essas informações. Os números não se atualizam sozinhos; para a versão mais nova, gere um novo arquivo na página de introdução.`; info.hidden=false;
+    ['btnPasta','btnRecarregar','btnDesconectar','btnArquivo'].forEach(id=>$(id).hidden=true);
+    return;
+  }
   if(conectado){
     el.innerHTML=`<span title="Dados carregados" class="dot ok"></span>Última atualização: <b>${esc(m.modificado)}</b>`;
     el.title=`${m.file}${m.sheet?' (aba '+m.sheet+')':''} · carregado em ${m.carregado}`;
@@ -702,7 +711,9 @@ $('inFile').addEventListener('change',async e=>{
 prep(VAZIO_DS);
 iniciarDL();
 if(!window.Chart||!window.XLSX) msg('Não foi possível carregar as bibliotecas do painel (gráficos/planilhas). Verifique a conexão com a internet e recarregue a página.','err');
-(async()=>{
+const GERADOR=/[?&]gerador=1(&|$)/.test(location.search);
+if(window.DADOS_EMBUTIDOS){ modo='retrato'; prep(window.DADOS_EMBUTIDOS); }
+else if(!GERADOR) (async()=>{
   await idb.del('dados_v2'); // limpa a cópia da base salva por versões antigas, se existir
   const h=await idb.get('pasta');
   if(h&&h.queryPermission){
@@ -713,3 +724,27 @@ if(!window.Chart||!window.XLSX) msg('Não foi possível carregar as bibliotecas 
     }catch(e){pasta=null; status();}
   }
 })();
+
+/* ---------- retrato: um arquivo .html com o painel e os dados atuais (gerado pela página de introdução) ---------- */
+const PREFIXO_RETRATO='TopGC_Leste_Painel';
+async function paraDataURL(url){const b=await (await fetch(url)).blob();return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(b);});}
+async function gerarRetratoHTML(){
+  if(VAZIO||!DS_ATUAL) throw new Error('Nenhum dado carregado para gerar o arquivo.');
+  const base=location.href.split('?')[0].replace(/[^/]*$/,'');
+  const txt=async f=>{const r=await fetch(base+f,{cache:'no-store'}); if(!r.ok) throw new Error('Não foi possível ler '+f+'.'); return r.text();};
+  let html=await txt('index.html');
+  const css=await txt('css/style.css'), calc=await txt('js/calculos.js'), app=await txt('js/app.js');
+  const logo=await paraDataURL(base+'../img/logo-aguas-do-rio.png'), ico=await paraDataURL(base+'../img/favicon-32.png'), ico2=await paraDataURL(base+'../img/favicon-192.png'), apple=await paraDataURL(base+'../img/apple-touch-icon.png');
+  const agora=dtBR(new Date());
+  const ds={months:DS_ATUAL.months,rows:DS_ATUAL.rows,ajustes:DS_ATUAL.ajustes||{},meta:{...DS_ATUAL.meta,retrato:agora}};
+  const js=s=>s.replace(/<\/script/gi,'<\\/script');
+  const troca=(a,b)=>{if(!html.includes(a)) throw new Error('Estrutura da página não reconhecida ('+a.slice(0,30)+').'); html=html.split(a).join(b);};
+  troca('<link rel="stylesheet" href="css/style.css">','<style>\n'+css+'\n</style>');
+  troca('<script src="js/calculos.js"></script>','<script>window.DADOS_EMBUTIDOS='+JSON.stringify(ds).replace(/</g,'\\u003c')+';</script>\n<script>\n'+js(calc)+'\n</script>');
+  troca('<script src="js/app.js"></script>','<script>\n'+js(app)+'\n</script>');
+  troca('src="../img/logo-aguas-do-rio.png"','src="'+logo+'"');
+  troca('href="../img/favicon-32.png"','href="'+ico+'"'); troca('href="../img/favicon-192.png"','href="'+ico2+'"'); troca('href="../img/apple-touch-icon.png"','href="'+apple+'"');
+  html=html.replace(/<a class="voltar"[^>]*>[\s\S]*?<\/a>/,'');
+  html=html.replace(/<title>([^<]*)<\/title>/,(m0,x)=>'<title>'+x+' · '+agora.split(',')[0]+'</title>');
+  return {html,nome:`${PREFIXO_RETRATO}_${MONTHS[MONTHS.length-1]||''}.html`};
+}

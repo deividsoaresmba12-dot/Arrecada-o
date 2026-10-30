@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 — 30/10/2026
+
+- Botão **Baixar painel com números (HTML)** na página de introdução: escolhe o painel (Leste ou Interior Lagos) e a pasta, e baixa um arquivo .html único com o painel e os dados, para enviar por e-mail/Teams. Quem abre vê os números sem conectar pasta.
+- O arquivo é montado no navegador a partir do próprio painel (mesmos cálculos); abre em "modo retrato", com aviso de que contém dados de clientes e sem os botões de pasta.
+- `.gitignore` bloqueia arquivos de retrato (`TopGC_*_Painel_*.html`).
+
 ## 1.1.1 — 30/10/2026
 
 - Link "‹ Painéis" no topo dos painéis Leste e Interior Lagos, para voltar à página de introdução.

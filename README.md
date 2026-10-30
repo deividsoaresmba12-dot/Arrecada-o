@@ -10,7 +10,7 @@ Página de introdução com dois painéis de faturamento, arrecadação e cobran
 
 **Os painéis abrem vazios.** Não há nenhum dado no repositório. As informações aparecem só depois que você conecta uma pasta do seu computador com a planilha. Tudo é processado **no seu navegador**: nenhum dado é enviado para servidor, e nenhum dado é salvo no navegador. O painel guarda apenas a referência da última pasta conectada, sem o conteúdo, para facilitar a próxima abertura; o botão **Desconectar** apaga essa referência.
 
-Versão atual: **1.1.1** (ver [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.2.0** (ver [CHANGELOG](CHANGELOG.md)).
 
 ## Como usar
 
@@ -28,6 +28,14 @@ Versão atual: **1.1.1** (ver [CHANGELOG](CHANGELOG.md)).
    - **Resumo executivo** (PDF de 1 página), **Excel por prioridade** e, no Leste, **Baixar base (Excel)**: gerados no próprio navegador.
 
 Na próxima vez que abrir o painel, ele mostra a última pasta usada; clique em **Recarregar** para permitir a leitura de novo.
+
+## Compartilhar os números (arquivo HTML)
+
+Na página de introdução, clique em **Baixar painel com números (HTML)**, escolha o painel e a pasta com a planilha. O navegador baixa um arquivo como `TopGC_Leste_Painel_2026-10.html`. Quem abrir esse arquivo vê o painel completo com os números (filtros, listas, Excel e PDF funcionam), sem conectar pasta.
+
+- O arquivo **contém dados de clientes**: compartilhe só internamente e **nunca** suba esse arquivo para o GitHub (o `.gitignore` já bloqueia).
+- É um retrato do momento: para números novos, gere outro arquivo.
+- Precisa de internet para carregar gráficos e fontes.
 
 ## Navegadores compatíveis
 

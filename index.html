@@ -9,7 +9,31 @@
 <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<style>body{margin:0}</style>
+<style>body{margin:0}
+/* botão "baixar painel com números" */
+.baixar-wrap{display:grid;justify-items:center;gap:6px;text-align:center}
+.baixar{font:700 13.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#E8710A;border:0;border-radius:8px;padding:11px 18px;cursor:pointer;box-shadow:0 8px 20px rgba(232,113,10,.28);display:inline-flex;gap:8px;align-items:center}
+.baixar:hover{background:#C2560C}
+.baixar:focus-visible{outline:3px solid #4A86D2;outline-offset:3px}
+.baixar-nota{margin:0;font-size:12.5px;color:var(--muted);max-width:56ch}
+#dlgHTML{border:0;border-radius:12px;padding:0;width:min(520px,calc(100vw - 32px));box-shadow:0 24px 60px rgba(5,5,13,.35);color:#05050D;background:#fff}
+#dlgHTML::backdrop{background:rgba(5,5,13,.55)}
+.dh-box{display:grid;gap:12px;padding:20px 22px;border-top:6px solid #2A60B8;border-radius:12px}
+.dh-box h2{margin:0;font:700 18px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:#123A7A}
+.dh-txt,.dh-aviso{margin:0;font-size:13.5px;color:#4d5870}
+.dh-aviso{background:#FFF2E7;border-radius:8px;padding:8px 10px;color:#7a3a08}
+.dh-op{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dh-btn{font:800 15px 'Montserrat','IBM Plex Sans',sans-serif;letter-spacing:.08em;color:#123A7A;background:#EEF4F8;border:1.5px solid #4A86D2;border-top:5px solid #2A60B8;border-radius:10px;padding:14px 10px;cursor:pointer}
+.dh-btn:hover{background:#dce9f8}
+.dh-btn:disabled{opacity:.5;cursor:wait}
+.dh-btn:focus-visible,.dh-fechar:focus-visible{outline:3px solid #4A86D2;outline-offset:2px}
+.dh-alt{font-size:13px;color:#4d5870;display:flex;gap:8px;align-items:center}
+.dh-msg{margin:0;font-size:13.5px;font-weight:600;color:#123A7A;min-height:1.2em}
+.dh-msg.err{color:#B42318}
+.dh-acoes{display:flex;justify-content:flex-end}
+.dh-fechar{font:600 13px var(--sans);border:1px solid #123A7A;background:#fff;color:#123A7A;border-radius:6px;padding:7px 14px;cursor:pointer}
+@media (max-width:480px){.dh-op{grid-template-columns:1fr}}
+</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&family=Montserrat:wght@700;800&display=swap">
 <style>
@@ -168,7 +192,29 @@ a.porta h3{font-family:'Montserrat','IBM Plex Sans','Segoe UI',Arial,sans-serif;
       </div>
     </a>
   </nav>
+
+  <div class="baixar-wrap">
+    <button type="button" class="baixar" id="btnBaixarHTML"><span aria-hidden="true">⤓</span> Baixar painel com números (HTML)</button>
+    <p class="baixar-nota">Gera um arquivo para enviar por e-mail ou Teams: quem abrir vê os números sem precisar conectar a pasta.</p>
   </div>
+  </div>
+
+<dialog id="dlgHTML" aria-labelledby="dhTit">
+  <form method="dialog" class="dh-box">
+    <h2 id="dhTit">Baixar painel com números</h2>
+    <p class="dh-txt">1. Escolha o painel. 2. Escolha a pasta com a planilha (a mesma que você conecta no painel). O arquivo é montado no seu navegador e baixado no seu computador.</p>
+    <div class="dh-op">
+      <button type="button" class="dh-btn" data-p="leste">LESTE</button>
+      <button type="button" class="dh-btn" data-p="top100">INTERIOR LAGOS</button>
+    </div>
+    <label class="dh-alt"><input type="checkbox" id="dhArquivos"> Escolher arquivos em vez de pasta</label>
+    <p class="dh-msg" id="dhMsg" role="status"></p>
+    <p class="dh-aviso"><b>Atenção:</b> o arquivo gerado contém dados de clientes. Compartilhe só com quem pode ver essas informações. Os números não se atualizam sozinhos.</p>
+    <div class="dh-acoes"><button value="fechar" class="dh-fechar">Fechar</button></div>
+  </form>
+  <input type="file" id="dhDir" webkitdirectory multiple hidden>
+  <input type="file" id="dhFiles" accept=".xlsx,.xls" multiple hidden>
+</dialog>
 
 </div>
 <script>
@@ -193,5 +239,50 @@ a.porta h3{font-family:'Montserrat','IBM Plex Sans','Segoe UI',Arial,sans-serif;
 </script>
 
 </body></html>
+<script>
+/* gera um .html do painel com os números: carrega o painel escondido, lê a pasta e monta o arquivo */
+(function(){
+  var dlg=document.getElementById('dlgHTML'), msgEl=document.getElementById('dhMsg'), alvo=null;
+  function msg(t,err){msgEl.textContent=t||'';msgEl.className='dh-msg'+(err?' err':'');}
+  function travar(b){[].forEach.call(document.querySelectorAll('.dh-btn'),function(x){x.disabled=b;});}
+  document.getElementById('btnBaixarHTML').addEventListener('click',function(){msg('');travar(false);try{dlg.showModal();}catch(e){dlg.setAttribute('open','');}});
+  function painel(p){return new Promise(function(res,rej){
+    var f=document.createElement('iframe'); f.style.cssText='position:fixed;left:-10000px;top:0;width:1400px;height:900px;border:0;visibility:hidden';
+    f.setAttribute('aria-hidden','true'); f.src=p+'/?gerador=1';
+    var t=setTimeout(function(){rej(new Error('O painel demorou para carregar. Verifique a internet e tente de novo.'));},30000);
+    f.onload=function(){var w=f.contentWindow, n=0;(function esp(){if(w.carregarArquivos&&w.gerarRetratoHTML&&w.XLSX){clearTimeout(t);res(f);}else if(++n>200){clearTimeout(t);rej(new Error('As bibliotecas do painel não carregaram. Verifique a internet.'));}else setTimeout(esp,100);})();};
+    document.body.appendChild(f);});}
+  async function* walk(dir,depth,path){for await (const [name,h] of dir.entries()){if(name.charAt(0)==='.')continue;if(h.kind==='directory'){if(depth<6) yield* walk(h,depth+1,path+name+'/');}else if(/\.(xlsx|xls)$/i.test(name)&&name.indexOf('~$')!==0) yield {name:name,path:path+name,get:function(){return h.getFile();}};}}
+  async function gerar(cands,origem){
+    var f=null;
+    try{
+      msg('Preparando o painel…'); f=await painel(alvo);
+      msg('Lendo a planilha…'); await f.contentWindow.carregarArquivos(cands,origem,'lista');
+      msg('Montando o arquivo…'); var r=await f.contentWindow.gerarRetratoHTML();
+      var url=URL.createObjectURL(new Blob([r.html],{type:'text/html;charset=utf-8'})), a=document.createElement('a');
+      a.href=url; a.download=r.nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(url);},60000);
+      msg('Pronto: '+r.nome+' foi baixado.');
+    }catch(e){var t=document.createElement('div');t.innerHTML=(e&&e.message)||'Não foi possível gerar o arquivo.';msg(t.textContent,true);}
+    finally{if(f)f.remove();travar(false);}
+  }
+  [].forEach.call(document.querySelectorAll('.dh-btn'),function(b){b.addEventListener('click',async function(){
+    alvo=b.dataset.p; msg('');
+    var usarArq=document.getElementById('dhArquivos').checked;
+    if(usarArq){document.getElementById('dhFiles').click();return;}
+    if(!window.showDirectoryPicker){document.getElementById('dhDir').click();return;}
+    try{var dir=await window.showDirectoryPicker({id:'topgc_'+(alvo==='leste'?'leste':'interior'),mode:'read'});}
+    catch(e){if(e.name==='AbortError')return; document.getElementById('dhDir').click(); return;}
+    travar(true); var c=[]; try{for await (const x of walk(dir,0,'')) c.push(x);}catch(e){}
+    gerar(c,{rotulo:'Pasta '+dir.name,nome:dir.name});
+  });});
+  document.getElementById('dhDir').addEventListener('change',function(e){var all=[].slice.call(e.target.files); if(!all.length)return; travar(true);
+    var raiz=(all[0].webkitRelativePath||'').split('/')[0]||'pasta';
+    var fl=all.filter(function(f){return /\.(xlsx|xls)$/i.test(f.name)&&f.name.indexOf('~$')!==0;}).map(function(f){return {name:f.name,path:f.webkitRelativePath||f.name,get:async function(){return f;}};});
+    e.target.value=''; gerar(fl,{rotulo:'Pasta '+raiz,nome:raiz});});
+  document.getElementById('dhFiles').addEventListener('change',function(e){var all=[].slice.call(e.target.files); if(!all.length)return; travar(true);
+    var fl=all.map(function(f){return {name:f.name,path:f.name,get:async function(){return f;}};});
+    e.target.value=''; gerar(fl,{rotulo:'Arquivo',nome:fl.length===1?fl[0].name:fl.length+' arquivos escolhidos'});});
+})();
+</script>
 </body>
 </html>

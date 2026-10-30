@@ -17,6 +17,7 @@ in/
 out/
 exportacoes/
 *.pdf
+TopGC_*_Painel_*.html
 
 # Sistema / editores
 .DS_Store
