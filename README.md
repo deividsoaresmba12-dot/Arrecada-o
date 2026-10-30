@@ -4,7 +4,7 @@ Painel de faturamento, arrecadação e cobrança das matrículas Top GC 15K da S
 
 **O painel abre vazio.** Não há nenhum dado no repositório. As informações aparecem só depois que você conecta uma pasta do seu computador com a planilha. Tudo é processado **no seu navegador**: nenhum dado é enviado para servidor, e nenhum dado é salvo no navegador. O painel guarda apenas a referência da última pasta conectada, sem o conteúdo, para facilitar a próxima abertura; o botão **Desconectar** apaga essa referência.
 
-Versão atual: **1.0.0** (ver [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.0.1** (ver [CHANGELOG](CHANGELOG.md)).
 
 ## Como usar
 

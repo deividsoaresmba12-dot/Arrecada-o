@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 — 30/10/2026
+
+- Ícone da aba do navegador trocado pelo símbolo "ae" azul da Águas do Rio (32, 192 e 180 px para celular).
+
 ## 1.0.0 — 30/10/2026
 
 Primeira versão publicada no GitHub, a partir do painel original (artefato com dados embutidos).
