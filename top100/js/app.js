@@ -38,7 +38,13 @@ let DATA=[], MONTHS=[], META={}, MESES=[], PERIODO='', PARCIAL=false, AJUSTES={}
 let DS_ATUAL=null;
 function prep(ds){
   DS_ATUAL=ds;
-  const r=C.preparar(ds,ds.ajustes||{});
+  const ok=new Set(ds.months||[]); [...SEL.mes].forEach(k=>{if(!ok.has(k))SEL.mes.delete(k);});
+  calcular();
+}
+/* recalcula com o filtro de mês; DS_ATUAL continua sendo a base inteira */
+function calcular(){
+  const ds=DS_ATUAL;
+  const r=C.preparar(C.recortarMeses(ds,SEL.mes),ds.ajustes||{},ds.months);
   DATA=r.DATA; MONTHS=r.MONTHS; MESES=r.MESES; PERIODO=r.PERIODO; PARCIAL=r.PARCIAL; META=ds.meta||{}; AJUSTES=ds.ajustes||{};
   VAZIO=!DATA.length;
   $('refMes').textContent=r.refMes;
@@ -51,13 +57,15 @@ const VAZIO_DS={months:[],rows:[],meta:{}};
 const pctClass=p=>p<0.5?'pct-low':p<0.95?'pct-mid':'pct-ok';
 
 /* ---------- filtros ---------- */
-const SEL={mun:new Set(),cls:new Set(),mat:new Set()};
+const SEL={mes:new Set(),mun:new Set(),cls:new Set(),mat:new Set()};
 const fMun={get value(){return [...SEL.mun].join(', ');}};
 const fMat={get value(){return [...SEL.mat].join(', ');}};
 const fCls={get value(){return [...SEL.cls].join(', ');}};
-const MS={mun:{id:'msMun',label:'Município',todos:'Todos os municípios'},cls:{id:'msCls',label:'Classificação',todos:'Todas as classificações'},mat:{id:'msMat',label:'Matrícula',todos:'Todas as matrículas'}};
+const MS={mes:{id:'msMes',label:'Mês',todos:'Todos os meses'},mun:{id:'msMun',label:'Município',todos:'Todos os municípios'},cls:{id:'msCls',label:'Classificação',todos:'Todas as classificações'},mat:{id:'msMat',label:'Matrícula',todos:'Todas as matrículas'}};
 const passa=(d,skip)=>C.passa(d,SEL,skip);
+const mesLbl=k=>`${C.NOMES_MES[+k.slice(5)-1]}/${k.slice(0,4)}`;
 function msOpcoes(key){
+  if(key==='mes') return ((DS_ATUAL&&DS_ATUAL.months)||[]).map(k=>({v:k,l:mesLbl(k),n:null}));
   if(key==='mun'){const b=DATA.filter(d=>passa(d,'mun'));return [...new Set(DATA.map(d=>d.c))].sort().map(v=>({v,l:v,n:b.filter(d=>d.c===v).length}));}
   if(key==='cls'){const b=DATA.filter(d=>(!SEL.mun.size||SEL.mun.has(d.c)));return [...new Set(DATA.map(clsDe))].sort().map(v=>({v,l:v,n:b.filter(d=>clsDe(d)===v).length}));}
   return DATA.filter(d=>(!SEL.mun.size||SEL.mun.has(d.c))&&(!SEL.cls.size||SEL.cls.has(clsDe(d)))).sort((a,b)=>b.F-a.F).map(d=>({v:String(d.m),l:`${d.m} – ${d.n}`,n:null}));
@@ -70,8 +78,9 @@ function podarSel(){
 const CARET='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 function msTexto(key){
   const s=SEL[key]; if(!s.size) return MS[key].todos;
+  if(key==='mes'&&s.size===1) return mesLbl([...s][0]);
   if(s.size===1){const v=[...s][0]; if(key==='mat'){const d=DATA.find(x=>String(x.m)===v); return d?`${d.m} – ${d.n}`:v;} return v;}
-  return `${s.size} selecionad${key==='mun'?'os':'as'}`;
+  return `${s.size} selecionad${key==='mun'||key==='mes'?'os':'as'}`;
 }
 function msRefresh(){Object.keys(MS).forEach(k=>{const r=$(MS[k].id); const b=r.querySelector('.ms-btn'); b.querySelector('.ms-txt').textContent=msTexto(k); b.classList.toggle('on',SEL[k].size>0); b.title=SEL[k].size?msTexto(k)+': '+[...SEL[k]].join(', '):MS[k].todos; if(!r.querySelector('.ms-pop').hidden) msLista(k);});}
 function msLista(key){
@@ -80,7 +89,7 @@ function msLista(key){
   r.querySelector('.ms-list').innerHTML=ops.length?ops.map(o=>`<label class="ms-opt"><input type="checkbox" value="${esc(o.v)}"${SEL[key].has(o.v)?' checked':''}><span title="${esc(o.l)}">${esc(o.l)}</span>${o.n!=null?`<em>${o.n}</em>`:''}</label>`).join(''):`<div class="ms-vazio">${VAZIO?MSG_VAZIO:'Nada encontrado'}</div>`;
 }
 function msFechar(except){Object.keys(MS).forEach(k=>{if(k===except)return;const r=$(MS[k].id);r.querySelector('.ms-pop').hidden=true;r.querySelector('.ms-btn').setAttribute('aria-expanded','false');});}
-function msMudou(key){ if(key!=='mat'){const ok=new Set(msOpcoes('mat').map(o=>o.v));[...SEL.mat].forEach(v=>{if(!ok.has(v))SEL.mat.delete(v);});} msRefresh(); render(); }
+function msMudou(key){ if(key==='mes'){msRefresh(); if(DS_ATUAL) calcular(); return;} if(key!=='mat'){const ok=new Set(msOpcoes('mat').map(o=>o.v));[...SEL.mat].forEach(v=>{if(!ok.has(v))SEL.mat.delete(v);});} msRefresh(); render(); }
 Object.keys(MS).forEach(key=>{
   const r=$(MS[key].id);
   r.innerHTML=`<span class="ms-lbl">${MS[key].label}</span><button type="button" class="ms-btn" aria-haspopup="listbox" aria-expanded="false"><span class="ms-txt"></span>${CARET}</button><div class="ms-pop" hidden><input class="ms-q" type="search" placeholder="Buscar ${MS[key].label.toLowerCase()}…" autocomplete="off" aria-label="Buscar ${MS[key].label.toLowerCase()}"><div class="ms-acts"><button type="button" data-a="all">Marcar todos</button><button type="button" data-a="none">Limpar</button></div><div class="ms-list" role="listbox" aria-multiselectable="true"></div></div>`;
@@ -284,6 +293,7 @@ function gaps(){
   li.push(DATA.some(d=>d.svc)?`<b>Saldo vencido:</b> vem da coluna <b>"Saldo vencido"</b> da planilha. <b>Saldo em aberto</b> = parcelado (Saldo PARC) + vencido + <b>a vencer</b> (faturas da aba "Base Fat2" sem pagamento e com vencimento a partir do dia seguinte ao último pagamento registrado, limitadas ao "Saldo total" da aba "Base Saldo").`:`<b>Saldo em aberto e saldo vencido:</b> o "Saldo total" da aba "Base Saldo" foi separado em <b>parcelado</b> (Saldo PARC), <b>a vencer</b> (faturas da aba "Base Fat2" sem pagamento e com vencimento a partir do dia seguinte ao último pagamento registrado) e <b>vencido</b> (faturas com vencimento passado e sem pagamento na aba "Base Arrecadação").`);
   {const dif=DATA.filter(d=>d.st!=null&&d.st-d.s>1).sort((a,b)=>(b.st-b.s)-(a.st-a.s)); if(dif.length) li.push(`<b>Saldo total sem fatura correspondente (fora do saldo em aberto):</b> ${dif.map(d=>`${d.m} – ${esc(d.n)}: ${R(d.st-d.s)}`).join('; ')}. Somam ${R(sum(dif.map(d=>d.st-d.s)))}. Esses valores não aparecem como vencidos nem como faturas a vencer; conferir no sistema (pode ser saldo antigo, pagamento ainda não baixado ou erro na aba "Base Saldo").`);}
   li.push(`<b>Outras colunas ausentes:</b> "QTD faturas" (usado NFC + NFA + PARC), "NOM_BAIRRO" (bairro vem da aba "Base Fat2"), colunas do mês vigente (usado o último mês com dados, ${mes}), "Dia Médio de Pagto" (calculado da aba "Base Arrecadação") e "Status Arrecadação" (no lugar, a coluna STATUS: Pago, Em Dia, Vencida). "Média dias pagto x venc." vem da coluna "MÉDIA DIAS PAGAMENTO".`);
+  li.push(`<b>Filtro de mês:</b> muda faturado, arrecadado, % arrecadado, gráficos, médias, status de arrecadação e prioridade (que usa o % arrecadado do período escolhido). Saldo de conta, parcelado, vencido e a vencer são a posição atual da base e não mudam com o mês. Os cards "do mês" mostram o último mês marcado.`);
   li.push(`A arrecadação de cada mês é o valor recebido no mês (colunas "Arrec Ref."), que pode incluir faturas de meses anteriores; por isso o acumulado pode passar de 100% do faturado.`);
   li.push(`A base tem <b>${DATA.length} matrículas</b> (aba "Top GC"). Os meses sem lançamento foram ignorados. "Economia média" = média da coluna QTD ECONOMIA por matrícula.`);
   $('gaps').innerHTML=`<p><b>Prioridade:</b> usa o % arrecadado (arrecadado ÷ faturado, ${PERIODO}) e o <b>saldo vencido</b> = saldo de conta – saldo parcelado ("Saldo PARC"), porque o parcelamento é cobrança futura. Matrículas que arrecadaram 95% ou mais do faturado nunca ficam acima de MÉDIA. O "saldo em aberto" dos cartões é apenas faturado – arrecadado no período; os dois números não se comparam diretamente.</p><ul>${li.map(t=>`<li>${t}</li>`).join('')}</ul>`;
@@ -439,7 +449,7 @@ function exportPrio(p,btn){
   ws['!freeze']={xSplit:2,ySplit:1};
   const info=[['Top GC Interior Lagos – Prioridade '+p],[],['Critério',CRIT[p]],['Ação sugerida',ACAO[p]],['Matrículas',rows.length],
     ['% do total de matrículas',filtered().length?rows.length/filtered().length:0],['Saldo de conta',sum(rows.map(d=>d.s))],
-    ['Período',PERIODO],['Mês de referência',$('refMes').textContent],['Filtro município',fMun.value||'Todos'],['Filtro classificação',fCls.value||'Todas'],['Filtro matrícula',fMat.value.trim()||'Todas'],
+    ['Período (filtro de mês)',PERIODO],['Mês de referência',$('refMes').textContent],['Filtro município',fMun.value||'Todos'],['Filtro classificação',fCls.value||'Todas'],['Filtro matrícula',fMat.value.trim()||'Todas'],
     ['Fonte',`${META.file} · ${META.origem}`],['Gerado em',dtBR(new Date())]];
   const wi=XLSX.utils.aoa_to_sheet(info); if(wi.B6)wi.B6.z='0.0%'; if(wi.B7)wi.B7.z='#,##0.00'; wi['!cols']=[{wch:26},{wch:70}];
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Matrículas'); XLSX.utils.book_append_sheet(wb,wi,'Critério');
@@ -481,7 +491,7 @@ async function gerarResumoPDF(btn){
     T('Mês de referência',196,17,{sz:6.3,c:'#c9d6ea',al:'right'}); T(mesRef,196,22.6,{sz:11,b:1,c:'#ffffff',al:'right'});
     T(`Última atualização: ${upd}`,196,27.6,{sz:6.3,c:'#c9d6ea',al:'right'});
     const lst=(s,todos)=>s.size?(s.size>3?`${s.size} selecionados`:[...s].join(', ')):todos;
-    T(`Filtros · Município: ${lst(SEL.mun,'Todos')} · Classificação: ${lst(SEL.cls,'Todas')} · Matrícula: ${lst(SEL.mat,'Todas')} · ${N(rows.length)} matrículas`,M,38.3,{sz:6.6,c:C.mut});
+    T(`Filtros · Mês: ${SEL.mes.size?PERIODO:'Todos'} · Município: ${lst(SEL.mun,'Todos')} · Classificação: ${lst(SEL.cls,'Todas')} · Matrícula: ${lst(SEL.mat,'Todas')} · ${N(rows.length)} matrículas`,M,38.3,{sz:6.6,c:C.mut});
     /* barras */
     let y=41; draw(C.lin); doc.setLineWidth(.2); fill('#ffffff'); doc.rect(M,y,W,32,'FD'); fill(C.mar); doc.rect(M,y,2.6,32,'F');
     const barra=(yy,tit,sub,dir,pct,cor)=>{const tw=T(tit,16,yy,{sz:8.6,b:1,c:C.mar}); T(sub,16+tw+1,yy,{sz:6.4,c:C.mut});
@@ -586,10 +596,11 @@ function render(){
   if(SEL.mun.size)parts.push('Município: <b>'+lista(SEL.mun,'municípios')+'</b>');
   if(SEL.cls.size)parts.push('Classificação: <b>'+lista(SEL.cls,'classificações')+'</b>');
   if(SEL.mat.size)parts.push('Matrícula: <b>'+lista(SEL.mat,'matrículas')+'</b>');
+  if(SEL.mes.size)parts.unshift('Mês: <b>'+esc(PERIODO)+'</b>');
   $('activeFilter').innerHTML=VAZIO?MSG_VAZIO:(parts.length?parts.join(' · '):'Sem filtro: <b>todas as matrículas do Interior Lagos</b>')+` · ${rows.length} matrícula(s)`;
   const k=kpis(rows);charts(rows);tabCls(rows);tabTop(rows);prio(rows);cad(rows);legendaCriterios(rows);resumo(rows,k);
 }
-$('btnReset').addEventListener('click',()=>{SEL.mun.clear();SEL.cls.clear();SEL.mat.clear();msFechar();msRefresh();render();});
+$('btnReset').addEventListener('click',()=>{const tinhaMes=SEL.mes.size>0;SEL.mes.clear();SEL.mun.clear();SEL.cls.clear();SEL.mat.clear();msFechar();msRefresh();if(tinhaMes&&DS_ATUAL)calcular();else render();});
 
 /* ---------- leitura dos arquivos ---------- */
 const ehPlanilha=n=>/\.(xlsx|xls)$/i.test(n)&&!n.startsWith('~$')&&!n.startsWith('.');

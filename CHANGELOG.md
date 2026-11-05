@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 — 05/11/2026
+
+- Painel Interior Lagos: novo **filtro de Mês** (seleção múltipla, antes de Município). Faturado, arrecadado, % arrecadado, gráficos, médias, status de arrecadação, prioridade, Top 20, listas, Excel e PDF passam a usar só os meses marcados. Cards "do mês" e "Mês de referência" mostram o último mês marcado.
+- Saldo de conta, parcelado, vencido e a vencer não mudam com o filtro (são a posição atual da base).
+- Novas funções `recortarMeses` e `nomePeriodo` em `top100/js/calculos.js`; período não contínuo aparece como "jan, set, out/2026".
+- Conferência com a base de 29/10/2026: sem filtro de mês, mesmos números da versão 1.2.0.
+
 ## 1.2.0 — 30/10/2026
 
 - Botão **Baixar painel com números (HTML)** na página de introdução: escolhe o painel (Leste ou Interior Lagos) e a pasta, e baixa um arquivo .html único com o painel e os dados, para enviar por e-mail/Teams. Quem abre vê os números sem conectar pasta.

@@ -35,6 +35,17 @@ Funções em `top100/js/calculos.js`: `lerAba`, `enriquecer`, `lerAjustes`, `cla
 - **A vencer** = faturas sem pagamento (pago < 99% do valor) com vencimento a partir do dia seguinte ao último pagamento registrado (sem pagamentos: hoje), limitado ao saldo total. O saldo de conta passa a ser `parcelado + a vencer + vencido`.
 - Se essas abas não existirem ou derem erro, o painel usa só a aba "Top GC" (como o original).
 
+### Filtro de mês (`recortarMeses`, `nomePeriodo`)
+
+| Item | Regra |
+|---|---|
+| Sem mês marcado | Base inteira (todos os meses com lançamento) |
+| Meses marcados | `f` e `a` de cada matrícula ficam só com esses meses; F, A, % arrecadado, meses pagantes, médias, status e prioridade são recalculados |
+| Faturado/Arrecadado do mês | Valores do último mês marcado |
+| Saldos | Saldo de conta, parcelado, vencido e a vencer não mudam (posição atual) |
+| Nome do período | Um mês: "out/2026"; meses seguidos: "set–out/2026"; meses soltos: "jan, set, out/2026" |
+| Arquivo de retrato (HTML) | Leva a base inteira; o filtro de mês funciona nele também |
+
 ### Derivados (`preparar`)
 
 - `sv` = saldo vencido lido (`tv`); só se não houver, `max(0, s − sp)`.
