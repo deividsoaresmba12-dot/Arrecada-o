@@ -10,7 +10,7 @@ Página de introdução com dois painéis de faturamento, arrecadação e cobran
 
 **Os painéis abrem vazios.** Não há nenhum dado no repositório. As informações aparecem só depois que você conecta uma pasta do seu computador com a planilha. Tudo é processado **no seu navegador**: nenhum dado é enviado para servidor, e nenhum dado é salvo no navegador. O painel guarda apenas a referência da última pasta conectada, sem o conteúdo, para facilitar a próxima abertura; o botão **Desconectar** apaga essa referência.
 
-Versão atual: **1.2.0** (ver [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.3.0** (ver [CHANGELOG](CHANGELOG.md)).
 
 ## Como usar
 
@@ -105,6 +105,7 @@ Minha pasta/
 - Aba principal: a primeira cujo cabeçalho (nas 15 primeiras linhas) tenha `MATRICULA` e uma coluna de saldo (`TOTAL VENCIDO`, `SALDO VENCIDO` ou `SALDO TOTAL`) — na base atual, a aba **Top GC**.
 - **Colunas obrigatórias:** `MATRICULA`, `CIDADE`, `CLASSIFICAÇÃO`, a coluna de saldo, `FAT. REF.01…FAT. REF.12` e `Arrec Ref.01…Arrec Ref.12`.
 - **Colunas opcionais:** `CLIENTE`, `UTILIZAÇÃO`, `CATEGORIA`, `SUB-CATEGORIA`, `QTD ECONOMIA`, `SIT_LIGAÇÃO`, `CARTEIRA`, `MACROCLUSTER.CURVA CLIENTE`, `MACROCLUSTER.MACRO CLUSTER`, `DATA LEITURA`, `NFC`, `NFA`, `PARC`, `SALDO PARC`, `VENCIMENTO`, `MÉDIA DIAS PAGAMENTO`, `STATUS`, `AÇÃO`.
+- **Filtro de Mês** (só no Interior Lagos): escolha um ou mais meses; faturamento, arrecadação, % arrecadado, gráficos e prioridade passam a usar só esses meses. Os saldos (conta, parcelado, vencido, a vencer) são a posição atual e não mudam.
 - **Abas complementares** (opcionais, no mesmo arquivo): `Base Fat2` (bairro e faturas a vencer), `Base Arrecadação` (dia médio de pagamento e pagamentos) e `Base Saldo` (saldo total).
 
 ## Regras de cálculo

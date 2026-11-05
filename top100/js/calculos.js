@@ -147,12 +147,29 @@
     return p;
   }
   /** Campos derivados, prioridade, status, pendências, período e mês parcial. Não altera as linhas recebidas. */
-  function preparar(ds, ajustes) {
+  /* Filtro de mês: mantém só os meses marcados no faturamento/arrecadação (saldos são posição atual e não mudam).
+     Os valores "do mês" passam a ser os do último mês marcado. Sem meses marcados, devolve a base inteira. */
+  function recortarMeses(ds, meses) {
+    if (!meses || !meses.size) return ds;
+    const idx = ds.months.map((k, i) => meses.has(k) ? i : -1).filter(i => i >= 0);
+    if (!idx.length) return ds;
+    const li = idx[idx.length - 1];
+    return { ...ds, months: idx.map(i => ds.months[i]),
+      rows: ds.rows.map(d => ({ ...d, f: idx.map(i => d.f[i]), a: idx.map(i => d.a[i]), fm: d.f[li] || 0, am: d.a[li] || 0 })) };
+  }
+  function nomePeriodo(MONTHS, todos) {
+    if (!MONTHS.length) return '';
+    const MESES = MONTHS.map(k => NOMES_MES[+k.slice(5) - 1].toLowerCase()), y = MONTHS[MONTHS.length - 1].slice(0, 4);
+    if (MONTHS.length === 1) return `${MESES[0]}/${y}`;
+    const pos = MONTHS.map(k => (todos || MONTHS).indexOf(k)), seguidos = pos.every((p, i) => !i || p === pos[i - 1] + 1);
+    return seguidos ? `${MESES[0]}–${MESES[MESES.length - 1]}/${y}` : `${MESES.join(', ')}/${y}`;
+  }
+
+  function preparar(ds, ajustes, todosMeses) {
     ajustes = ajustes || {};
     const DATA = ds.rows.map(d => ({ ...d })), MONTHS = ds.months;
     const MESES = MONTHS.map(k => NOMES_MES[+k.slice(5) - 1]);
-    const y = MONTHS.length ? MONTHS[MONTHS.length - 1].slice(0, 4) : '';
-    const PERIODO = MONTHS.length ? `${MESES[0].toLowerCase()}–${MESES[MESES.length - 1].toLowerCase()}/${y}` : '';
+    const PERIODO = nomePeriodo(MONTHS, todosMeses);
     DATA.forEach(d => {
       d.F = sum(d.f); d.A = sum(d.a); d.pct = d.F ? d.A / d.F : 1; d.sa = d.F - d.A;
       d.sp = d.sp || 0; d.sv = d.tv != null ? d.tv : Math.max(0, (d.s || 0) - d.sp); d.av = d.av || 0;
@@ -174,5 +191,5 @@
   }
   const passa = (d, SEL, skip) => (skip === 'mun' || !SEL.mun.size || SEL.mun.has(d.c)) && (skip === 'cls' || !SEL.cls.size || SEL.cls.has(clsDe(d))) && (skip === 'mat' || !SEL.mat.size || SEL.mat.has(String(d.m)));
 
-  return { PRIOS, NOMES_MES, NOMES_MES_LONGO, sum, norm, num, serialYM, serialBR, mcNome, clsDe, lerAba, enriquecer, lerAjustes, classificar, statusArr, pendencias, preparar, passa };
+  return { PRIOS, NOMES_MES, NOMES_MES_LONGO, sum, norm, num, serialYM, serialBR, mcNome, clsDe, lerAba, enriquecer, lerAjustes, classificar, statusArr, pendencias, recortarMeses, nomePeriodo, preparar, passa };
 });
