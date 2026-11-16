@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1 — 16/11/2026
+
+- Painel Interior Lagos: botão de **download em Excel** no card **Saldo vencido**. Baixa as matrículas com saldo vencido (da maior para a menor dívida), respeitando os filtros, no mesmo formato do Excel por prioridade (abas "Matrículas" e "Critério"). Arquivo `TopGC_InteriorLagos_Saldo_Vencido_<AAAA-MM>.xlsx`.
+- Título do card encurtado para "Saldo vencido". Clicar no restante do card continua abrindo a lista.
+
 ## 1.3.0 — 05/11/2026
 
 - Painel Interior Lagos: novo **filtro de Mês** (seleção múltipla, antes de Município). Faturado, arrecadado, % arrecadado, gráficos, médias, status de arrecadação, prioridade, Top 20, listas, Excel e PDF passam a usar só os meses marcados. Cards "do mês" e "Mês de referência" mostram o último mês marcado.

@@ -295,6 +295,10 @@ dialog#dlg .dh{flex:0 0 auto}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* ---- paleta mais neutra (menos azul) ---- */
 .kb-card.click{cursor:pointer;transition:box-shadow .15s,transform .15s}
+.kb-card .kb-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.kb-card .dl-ven{width:28px;height:28px;background:rgba(255,255,255,.95);border-color:rgba(255,255,255,.6);color:#B42318;flex:0 0 auto;margin:-4px -6px 0 0}
+.kb-card .dl-ven:hover{background:#fff;border-color:#fff}
+.kb-card .dl-ven:focus-visible{outline:3px solid #fff;outline-offset:1px}
 .kb-card.click:hover{box-shadow:0 8px 20px rgba(180,35,24,.3);transform:translateY(-2px)}
 .kb-card.click:focus-visible{outline:3px solid #f3b0a9;outline-offset:2px}
 .kb-card .go{display:block;margin-top:4px;font-size:12px;font-weight:700;opacity:.95}
