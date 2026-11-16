@@ -10,7 +10,7 @@ Página de introdução com dois painéis de faturamento, arrecadação e cobran
 
 **Os painéis abrem vazios.** Não há nenhum dado no repositório. As informações aparecem só depois que você conecta uma pasta do seu computador com a planilha. Tudo é processado **no seu navegador**: nenhum dado é enviado para servidor, e nenhum dado é salvo no navegador. O painel guarda apenas a referência da última pasta conectada, sem o conteúdo, para facilitar a próxima abertura; o botão **Desconectar** apaga essa referência.
 
-Versão atual: **1.3.0** (ver [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.3.1** (ver [CHANGELOG](CHANGELOG.md)).
 
 ## Como usar
 
@@ -25,7 +25,7 @@ Versão atual: **1.3.0** (ver [CHANGELOG](CHANGELOG.md)).
    - **Trocar pasta**: escolhe outra pasta.
    - **Desconectar**: limpa a tela e esquece a pasta.
    - **Abrir planilha**: alternativa sem conectar pasta; escolha a planilha (e, se quiser, o `ajustes.xlsx`).
-   - **Resumo executivo** (PDF de 1 página), **Excel por prioridade** e, no Leste, **Baixar base (Excel)**: gerados no próprio navegador.
+   - **Resumo executivo** (PDF de 1 página), **Excel por prioridade**, **Excel do saldo vencido** (botão no card, só no Interior Lagos) e, no Leste, **Baixar base (Excel)**: gerados no próprio navegador.
 
 Na próxima vez que abrir o painel, ele mostra a última pasta usada; clique em **Recarregar** para permitir a leitura de novo.
 
