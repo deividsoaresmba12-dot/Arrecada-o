@@ -7,7 +7,7 @@
 'use strict';
 const C = window.Calculos;
 const { PRIOS, NOMES_MES, sum, norm, mcNome, clsDe } = C;
-const VERSAO = '1.2.0';
+const VERSAO = '1.3.2';
 
 const CRIT={
   'CRÍTICA':'% arrecadado < 50% ou saldo vencido (sem parcelamento) ≥ R$ 1.000.000,00, exceto quem arrecadou ≥ 95%',
@@ -175,7 +175,7 @@ function kpis(rows){
     <div class="kb-card fat"><div class="lbl">Faturado do mês${VAZIO?'':' · '+mesLbl}</div><div class="val">${D(R(fm))}</div><div class="note">${VAZIO?MSG_VAZIO:`${nFat} de ${rows.length} matrículas faturadas${PARCIAL?' · mês parcial':''}`}</div></div>
     <div class="kb-card arr"><div class="lbl">Arrecadado do mês${VAZIO?'':' · '+mesLbl}</div><div class="val">${D(R(am))}</div><div class="note">${VAZIO?VZ:`<b>${P(t.pm)}</b> do faturado do mês${t.pm>1?' · inclui faturas anteriores e parcelamentos':''}`}</div></div>
     <div class="kb-card sal"><div class="lbl">Saldo em aberto · saldo de conta</div><div class="val" title="${D(R(S))}">${D(curto(S))}</div><div class="note">${VAZIO?VZ:`parcelado ${curto(t.SP)} · ${N(t.qv)} faturas em aberto · ${N(t.pq)} parcelas futuras`}</div></div>
-    <div class="kb-card ven${VAZIO?'':' click'}"${VAZIO?'':' role="button" tabindex="0" aria-haspopup="dialog" data-open="ven" title="Ver as matrículas com saldo vencido"'}><div class="lbl">Saldo vencido · total vencido</div><div class="val" title="${D(R(t.SV))}">${D(curto(t.SV))}</div><div class="note">${VAZIO?VZ:`<b>${P(t.pctSV)}</b> do saldo de conta · ${N(t.nSV)} matrículas com vencido · <span class="go2">ver lista ›</span>`}</div></div>
+    <div class="kb-card ven${VAZIO?'':' click'}"${VAZIO?'':' role="button" tabindex="0" aria-haspopup="dialog" data-open="ven" title="Ver as matrículas com saldo vencido"'}><div class="kb-top"><div class="lbl">Saldo vencido</div>${VAZIO?'':`<button class="dl dl-ven" type="button" data-dl="VENCIDO" title="Baixar matrículas com saldo vencido em Excel" aria-label="Baixar as matrículas com saldo vencido em Excel">${ICON_DL}</button>`}</div><div class="val" title="${D(R(t.SV))}">${D(curto(t.SV))}</div><div class="note">${VAZIO?VZ:`<b>${P(t.pctSV)}</b> do saldo de conta · ${N(t.nSV)} matrículas com vencido · <span class="go2">ver lista ›</span>`}</div></div>
   </div>
   <div class="kb-foot">
     <span>Matrículas <b>${D(N(rows.length))}</b></span>
@@ -335,8 +335,8 @@ $('dChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b
 $('cad').addEventListener('click',e=>{const c=e.target.closest('.pc[data-k]');if(c)abrirCad(c.dataset.k);});
 $('cad').addEventListener('keydown',e=>{const c=e.target.closest('.pc[data-k]');if(c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();abrirCad(c.dataset.k);}});
 function abrirVencido(){abrirPrio(null,null,null,{fn:d=>(d.sv||0)>0,sort:(a,b)=>b.sv-a.sv,cor:'var(--crit)',titulo:'Saldo vencido',sub:`Matrículas com saldo vencido (saldo de conta − saldo parcelado), da maior para a menor · Período ${PERIODO}`});}
-$('kpis').addEventListener('click',e=>{if(e.target.closest('[data-open="cad"]'))abrirCad('');if(e.target.closest('[data-open="ven"]'))abrirVencido();});
-$('kpis').addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;if(e.target.closest('[data-open="ven"]')){e.preventDefault();abrirVencido();}else if(e.target.closest('[data-open="cad"]')){e.preventDefault();abrirCad('');}});
+$('kpis').addEventListener('click',e=>{const b=e.target.closest('.dl');if(b){e.stopPropagation();exportPrio(b.dataset.dl,b);return;}if(e.target.closest('[data-open="cad"]'))abrirCad('');if(e.target.closest('[data-open="ven"]'))abrirVencido();});
+$('kpis').addEventListener('keydown',e=>{if(e.target.closest('.dl'))return;if(e.key!=='Enter'&&e.key!==' ')return;if(e.target.closest('[data-open="ven"]')){e.preventDefault();abrirVencido();}else if(e.target.closest('[data-open="cad"]')){e.preventDefault();abrirCad('');}});
 $('segPareto').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(!b)return;PARETO_M=b.dataset.m;[...$('segPareto').children].forEach(x=>x.classList.toggle('on',x===b));charts(filtered());});
 const abrirGrupo=k=>CLS_DIM==='mc'?abrirPrio(null,null,k):abrirPrio(null,k);
 $('tCls').addEventListener('click',e=>{const r=e.target.closest('tr.rclick');if(r)abrirGrupo(r.dataset.cl);});
@@ -366,8 +366,9 @@ const semAcento=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'');
 function exportPrio(p,btn){
   if(VAZIO){toast(MSG_VAZIO);return;}
   if(!window.XLSX){toast('O leitor de planilhas não carregou. Recarregue a página.');return;}
-  const rows=filtered().filter(d=>p==null||d.pr===p).sort(p==null?(a,b)=>b.F-a.F:(a,b)=>b.s-a.s);
-  if(!rows.length){toast(p==null?'Nenhuma matrícula no filtro atual.':'Nenhuma matrícula nesse nível com o filtro atual.');return;}
+  const ven=p==='VENCIDO';
+  const rows=ven?filtered().filter(d=>(d.sv||0)>0).sort((a,b)=>b.sv-a.sv):filtered().filter(d=>p==null||d.pr===p).sort(p==null?(a,b)=>b.F-a.F:(a,b)=>b.s-a.s);
+  if(!rows.length){toast(ven?'Nenhuma matrícula com saldo vencido no filtro atual.':p==null?'Nenhuma matrícula no filtro atual.':'Nenhuma matrícula nesse nível com o filtro atual.');return;}
   const nm=MONTHS.length, ult=i=>i<0?'':`${MESES[i]}/${MONTHS[i].slice(0,4)}`;
   const cols=[
     ['Matrícula',d=>d.m,null,12],['Cliente',d=>d.n,null,42],['Município',d=>d.c,null,18],['Bairro',d=>d.b||'',null,18],
@@ -386,15 +387,15 @@ function exportPrio(p,btn){
   cols.forEach((c,j)=>{if(!c[2])return;for(let i=1;i<=rows.length;i++){const ref=XLSX.utils.encode_cell({r:i,c:j});if(ws[ref]&&typeof ws[ref].v==='number')ws[ref].z=c[2];}});
   ws['!cols']=cols.map(c=>({wch:c[3]})); ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:cols.length-1}})};
   ws['!freeze']={xSplit:2,ySplit:1};
-  const info=[[p==null?'Acompanhamento GC Leste – Base de matrículas':'Acompanhamento GC Leste – Prioridade '+p],[],['Critério',p==null?'Todas as prioridades (ver coluna Prioridade)':CRIT[p]],['Ação sugerida',p==null?'Ver ação por prioridade abaixo':ACAO[p]],['Matrículas',rows.length],
-    ['% do total de matrículas',filtered().length?rows.length/filtered().length:0],['Saldo de conta',sum(rows.map(d=>d.s))],
+  const info=[[ven?'Acompanhamento GC Leste – Matrículas com saldo vencido':p==null?'Acompanhamento GC Leste – Base de matrículas':'Acompanhamento GC Leste – Prioridade '+p],[],['Critério',ven?'Saldo vencido (saldo de conta – saldo parcelado) maior que zero, do maior para o menor':p==null?'Todas as prioridades (ver coluna Prioridade)':CRIT[p]],['Ação sugerida',ven?'Ver a coluna Prioridade de cada matrícula':p==null?'Ver ação por prioridade abaixo':ACAO[p]],['Matrículas',rows.length],
+    ['% do total de matrículas',filtered().length?rows.length/filtered().length:0],[ven?'Saldo vencido':'Saldo de conta',sum(rows.map(d=>ven?d.sv:d.s))],
     ['Período',PERIODO],['Mês de referência',$('refMes').textContent],['Filtro município',fMun.value||'Todos'],['Filtro classificação',fCls.value||'Todas'],['Filtro matrícula',fMat.value.trim()||'Todas'],
     ['Fonte',`${META.file} · ${META.origem}`],['Gerado em',dtBR(new Date())],
     ...(p==null?[[],['Prioridade','Matrículas · ação sugerida'],...PRIOS.map(x=>[x,`${rows.filter(d=>d.pr===x).length} · ${ACAO[x]}`])]:[])];
   const wi=XLSX.utils.aoa_to_sheet(info); if(wi.B6)wi.B6.z='0.0%'; if(wi.B7)wi.B7.z='#,##0.00'; wi['!cols']=[{wch:26},{wch:70}];
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Matrículas'); XLSX.utils.book_append_sheet(wb,wi,'Critério');
   const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
-  const fname=`TopGC_Leste_${p==null?'Base':'Prioridade_'+semAcento(p)}_${MONTHS[nm-1]||''}${SEL.mun.size===1?'_'+semAcento(fMun.value).replace(/[^A-Za-z0-9]+/g,'_'):SEL.mun.size>1?'_'+SEL.mun.size+'_municipios':''}.xlsx`;
+  const fname=`TopGC_Leste_${ven?'Saldo_Vencido':p==null?'Base':'Prioridade_'+semAcento(p)}_${MONTHS[nm-1]||''}${SEL.mun.size===1?'_'+semAcento(fMun.value).replace(/[^A-Za-z0-9]+/g,'_'):SEL.mun.size>1?'_'+SEL.mun.size+'_municipios':''}.xlsx`;
   if(btn)btn.disabled=true;
   salvarArquivo(fname,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})).then(r=>avisoSalvo(r,fname))
    .catch(e=>{const c=e&&e.code;if(c==='declined')return;if(c==='rate_limited')toast('Já existe um download aguardando confirmação.');else if(c==='too_large')toast('Arquivo grande demais para baixar aqui.');else toast('Não foi possível baixar o arquivo.');})

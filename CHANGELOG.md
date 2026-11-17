@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2 — 17/11/2026
+
+- Painel Leste: botão de **download em Excel** no card **Saldo vencido**, igual ao do Interior Lagos. Baixa as matrículas com saldo vencido (da maior para a menor dívida), respeitando os filtros (abas "Matrículas" e "Critério"). Arquivo `TopGC_Leste_Saldo_Vencido_<AAAA-MM>.xlsx`.
+- Título do card encurtado para "Saldo vencido". Clicar no restante do card continua abrindo a lista.
+- Conferido com a base de 30/10/2026: 163 matrículas, R$ 31.776.745,62.
+
 ## 1.3.1 — 16/11/2026
 
 - Painel Interior Lagos: botão de **download em Excel** no card **Saldo vencido**. Baixa as matrículas com saldo vencido (da maior para a menor dívida), respeitando os filtros, no mesmo formato do Excel por prioridade (abas "Matrículas" e "Critério"). Arquivo `TopGC_InteriorLagos_Saldo_Vencido_<AAAA-MM>.xlsx`.
